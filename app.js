@@ -9,12 +9,9 @@ const app = express();
 app.use(express.json());
 mongoose.connect(DB_URL);
 
-app.get('/', (req, res) => {
-  res.status(200).json('Server is working now');
-});
 app.use((req, res, next) => {
   req.user = {
-    _id: '62dd2b56203eef6e6e6c0558',
+    _id: '62dd2b56203eef6e6e6c0559',
   };
   next();
 });
