@@ -38,7 +38,13 @@ const deleteCard = (req, res) => {
       }
       res.send({ message: `Карточка '${card.name}' успешно удалена` });
     })
-    .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        return;
+      }
+      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+    });
 };
 
 const addLike = (req, res) => {
