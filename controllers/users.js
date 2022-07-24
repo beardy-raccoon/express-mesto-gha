@@ -23,13 +23,19 @@ const getUserById = (req, res) => {
       }
       res.send({ data: user });
     })
-    .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        return;
+      }
+      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+    });
 };
 
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((newUser) => res.satus(201).send({ data: newUser }))
+    .then((newUser) => res.status(201).send({ data: newUser }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
