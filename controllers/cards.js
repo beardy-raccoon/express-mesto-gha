@@ -43,9 +43,13 @@ const deleteCard = (req, res) => {
 
 const addLike = (req, res) => {
   const { _id } = req.user;
-  const { cardId } = req.params.cardId;
-  Cards.findByIdAndUpdate(cardId, { $addToSet: { likes: _id } }, { new: true, runValidators: true })
-    .then((cardLike) => res.send({ data: cardLike }))
+  Cards.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: _id } }, { new: true })
+    .then((cardLike) => {
+      if (!cardLike) {
+        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+      }
+      res.send({ data: cardLike });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
@@ -57,9 +61,14 @@ const addLike = (req, res) => {
 
 const deleteLike = (req, res) => {
   const { _id } = req.user;
-  const { cardId } = req.params.cardId;
-  Cards.findByIdAndUpdate(cardId, { $pull: { likes: _id } }, { new: true, runValidators: true })
-    .then((cardDisLike) => res.send({ data: cardDisLike }))
+  Cards.findByIdAndUpdate(req.params.cardId, { $pull: { likes: _id } }, { new: true })
+    .then((cardDisLike) => {
+      if (!cardDisLike) {
+        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        return;
+      }
+      res.send({ data: cardDisLike });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
