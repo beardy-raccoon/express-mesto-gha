@@ -46,12 +46,12 @@ const addLike = (req, res) => {
   Cards.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((cardLike) => {
       if (!cardLike) {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
       }
       res.send({ data: cardLike });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
         return;
       }
@@ -64,13 +64,13 @@ const deleteLike = (req, res) => {
   Cards.findByIdAndUpdate(req.params.cardId, { $pull: { likes: _id } }, { new: true })
     .then((cardDisLike) => {
       if (!cardDisLike) {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
         return;
       }
       res.send({ data: cardDisLike });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
         return;
       }
