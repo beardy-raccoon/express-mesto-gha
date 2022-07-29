@@ -1,10 +1,13 @@
 const router = require('express').Router();
+const auth = require('../middlewares/auth');
 const userRouter = require('./users');
 const cardRouter = require('./cards');
+const publicRouter = require('./public');
 const { NOT_FOUND_ERR, NOT_FOUND_URL_ERR_MESSAGE } = require('../errors/errors');
 
-router.use(userRouter);
-router.use(cardRouter);
+router.use(publicRouter);
+router.use(auth, userRouter);
+router.use(auth, cardRouter);
 router.use((req, res) => {
   res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_URL_ERR_MESSAGE });
 });

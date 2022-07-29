@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
   NOT_FOUND_ERR,
@@ -8,10 +10,24 @@ const {
   SERVER_ERR_MESSAGE,
 } = require('../errors/errors');
 
+const JWT_SECRET_KEY = 'super-mega-secret';
+
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
+};
+
+const getUserInfo = (req, res) => {
+  const { _id } = req.user;
+  User.findById(_id)
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ message: 'user not found or doesn\'t exist yet' });
+        return;
+      }
+      res.send({ data: user });
+    });
 };
 
 const getUserById = (req, res) => {
@@ -33,15 +49,33 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
     .then((newUser) => res.status(201).send({ data: newUser }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE, more: err.message });
         return;
       }
-      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+      if (err.code === 11000) {
+        res.status(409).send({ message: 'email already exist' });
+        return;
+      }
+      res.status(SERVER_ERR).send(err.name);
     });
 };
 
@@ -84,10 +118,44 @@ const updateUserAvatar = (req, res) => {
     });
 };
 
+const login = (req, res) => {
+  const { email, password } = req.body;
+  User.findOne({ email }).select('+password')
+    .then((user) => {
+      if (!user) {
+        res.status(403).send({ message: 'Wrong email or password' });
+      }
+      return Promise.all([user, bcrypt.compare(password, user.password)]);
+    })
+    .then(([user, isLoggedIn]) => {
+      if (!isLoggedIn) {
+        const err = new Error('Wrong email or password');
+        err.statusCode = 403;
+        throw err;
+      }
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET_KEY, { expiresIn: '7d' });
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      });
+      res.send({ token });
+    })
+    .catch((err) => {
+      if (err.statusCode === 403) {
+        return res.status(403).send({ message: err.message });
+      }
+      return res.send({ name: err.name, message: err.message });
+    });
+};
+
 module.exports = {
   getUsers,
+  getUserInfo,
   getUserById,
   createUser,
   updateUserProfile,
   updateUserAvatar,
+  login,
+  JWT_SECRET_KEY,
 };
