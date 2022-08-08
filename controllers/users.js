@@ -131,7 +131,7 @@ const login = (req, res) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        res.status(403).send({ message: 'Wrong email or password' });
+        res.status(401).send({ message: 'Wrong email or password' });
       }
       return Promise.all([user, bcrypt.compare(password, user.password)]);
     })
