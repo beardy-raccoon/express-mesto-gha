@@ -37,6 +37,7 @@ const getUserById = (req, res, next) => {
       if (err.name === 'CastError') {
         throw new BadRequestError('Неверный запрос');
       }
+      throw err;
     })
     .catch(next);
 };
