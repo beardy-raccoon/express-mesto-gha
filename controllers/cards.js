@@ -30,7 +30,29 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Cards.findByIdAndDelete(req.params.cardId)
+  Cards.findById(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: 'Not found' });
+        return;
+      }
+      if (String(card.owner) === req.user._id) {
+        Cards.findByIdAndDelete(req.params.cardId)
+          .then(() => {
+            res.status(200).send({ message: 'Deleted' })
+              .catch((err) => {
+                if (err.name === 'CastError') {
+                  res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+                }
+              });
+          });
+      } else {
+        res.status(403).send({ message: 'Forbidden!' });
+      }
+    });
+};
+
+/* Cards.findByIdAndDelete(req.params.cardId)
     .then((card) => {
       if (!card) {
         res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
@@ -44,8 +66,7 @@ const deleteCard = (req, res) => {
         return;
       }
       res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
-    });
-};
+    }); */
 
 const addLike = (req, res) => {
   const { _id } = req.user;
