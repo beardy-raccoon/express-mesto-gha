@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { errors } = require('celebrate');
 const router = require('./routes/index');
 
 const { PORT = 3000 } = process.env;
@@ -19,13 +20,6 @@ app.use(helmet());
 app.use(limiter);
 
 mongoose.connect(DB_URL);
-
-/* app.use((req, res, next) => {
-  req.user = {
-    _id: '62dd2b56203eef6e6e6c0559',
-  };
-  next();
-}); */
-
+app.use(errors());
 app.use('/', router);
 app.listen(PORT);
