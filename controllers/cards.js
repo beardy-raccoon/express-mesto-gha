@@ -1,20 +1,15 @@
+const BadRequestError = require('../errors/bad-request-error');
+const ForbiddenError = require('../errors/forbidden-error');
+const NotFoundError = require('../errors/not-found-error');
 const Cards = require('../models/card');
-const {
-  NOT_FOUND_ERR,
-  BAD_REQUEST_ERR,
-  SERVER_ERR,
-  NOT_FOUND_CARD_ERR_MESSAGE,
-  BAD_REQUEST_ERR_MESSAGE,
-  SERVER_ERR_MESSAGE,
-} = require('../errors/errors');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Cards.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const { _id } = req.user;
 
@@ -22,87 +17,67 @@ const createCard = (req, res) => {
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
-        return;
+        throw new BadRequestError('Неверный запрос');
       }
-      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+      next();
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: 'Not found' });
-        return;
+        throw new NotFoundError('Карточка не найдена');
       }
       if (String(card.owner) === req.user._id) {
         Cards.findByIdAndDelete(req.params.cardId)
           .then(() => {
-            res.status(200).send({ message: 'Deleted' })
+            res.status(200).send({ message: 'Карточка успешно удалена' })
               .catch((err) => {
                 if (err.name === 'CastError') {
-                  res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
+                  throw new BadRequestError('Неверный запрос');
                 }
+                next(err);
               });
           });
       } else {
-        res.status(403).send({ message: 'Forbidden!' });
+        throw new ForbiddenError('Чужие карточки удалять запрещено');
       }
     })
-    .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
+    .catch(next);
 };
 
-/* Cards.findByIdAndDelete(req.params.cardId)
-    .then((card) => {
-      if (!card) {
-        res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
-        return;
-      }
-      res.send({ message: `Карточка '${card.name}' успешно удалена` });
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
-        return;
-      }
-      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
-    }); */
-
-const addLike = (req, res) => {
+const addLike = (req, res, next) => {
   const { _id } = req.user;
   Cards.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: _id } }, { new: true })
     .then((cardLike) => {
       if (!cardLike) {
-        res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: cardLike });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
-        return;
+        throw new BadRequestError('Неверный запрос');
       }
-      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+      next(err);
     });
 };
 
-const deleteLike = (req, res) => {
+const deleteLike = (req, res, next) => {
   const { _id } = req.user;
   Cards.findByIdAndUpdate(req.params.cardId, { $pull: { likes: _id } }, { new: true })
     .then((cardDisLike) => {
       if (!cardDisLike) {
-        res.status(NOT_FOUND_ERR).send({ message: NOT_FOUND_CARD_ERR_MESSAGE });
-        return;
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: cardDisLike });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_ERR).send({ message: BAD_REQUEST_ERR_MESSAGE });
-        return;
+        throw new BadRequestError('Неверный запрос');
       }
-      res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE });
+      next(err);
     });
 };
 
