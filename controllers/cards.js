@@ -49,7 +49,8 @@ const deleteCard = (req, res) => {
       } else {
         res.status(403).send({ message: 'Forbidden!' });
       }
-    });
+    })
+    .catch(() => res.status(SERVER_ERR).send({ message: SERVER_ERR_MESSAGE }));
 };
 
 /* Cards.findByIdAndDelete(req.params.cardId)
