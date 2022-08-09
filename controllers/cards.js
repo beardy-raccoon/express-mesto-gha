@@ -42,7 +42,7 @@ const deleteCard = (req, res, next) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Неверный запрос'));
       } else {
-        next(new ForbiddenError('Чужие карточки удалять запрещено'));
+        next(err);
       }
     });
 };
