@@ -12,7 +12,7 @@ const signupValidation = celebrate({
       .min(6)
       .max(30)
       .email(),
-    password: Joi.string().required().min(4).max(30),
+    password: Joi.string().required().min(4),
   }),
 });
 
@@ -23,7 +23,7 @@ const signinValidation = celebrate({
       .min(6)
       .max(30)
       .email(),
-    password: Joi.string().required().min(4).max(30),
+    password: Joi.string().required().min(4),
   }),
 });
 
