@@ -4,6 +4,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-error');
 const BadRequestError = require('../errors/bad-request-error');
 const UnauthorizedError = require('../errors/unauthorized-error');
+const EmailExistError = require('../errors/email-exist-error');
 
 const JWT_SECRET_KEY = 'super-mega-secret';
 
@@ -35,11 +36,11 @@ const getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      throw err;
-    })
-    .catch(next);
+    });
 };
 
 const createUser = (req, res, next) => {
@@ -70,13 +71,13 @@ const createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
       }
       if (err.code === 11000) {
-        res.status(409).send({ message: 'Этот email уже занят' });
-        return;
+        next(new EmailExistError('Этот email уже занят'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -91,9 +92,10 @@ const updateUserProfile = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -109,9 +111,10 @@ const updateUserAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -136,12 +139,7 @@ const login = (req, res, next) => {
       });
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.statusCode === 403) {
-        return res.status(403).send({ message: err.message });
-      }
-      return next();
-    });
+    .catch(next);
 };
 
 module.exports = {

@@ -1,6 +1,5 @@
 const { celebrate, Joi } = require('celebrate');
-
-const URL_REG_EXP = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)?/;
+const { URL_REG_EXP } = require('../utils/consts');
 
 const signupValidation = celebrate({
   body: Joi.object().keys({
@@ -9,10 +8,8 @@ const signupValidation = celebrate({
     avatar: Joi.string().pattern(URL_REG_EXP),
     email: Joi.string()
       .required()
-      .min(6)
-      .max(30)
       .email(),
-    password: Joi.string().required().min(4),
+    password: Joi.string().required(),
   }),
 });
 
@@ -20,10 +17,8 @@ const signinValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string()
       .required()
-      .min(6)
-      .max(30)
       .email(),
-    password: Joi.string().required().min(4),
+    password: Joi.string().required(),
   }),
 });
 

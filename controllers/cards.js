@@ -17,34 +17,34 @@ const createCard = (req, res, next) => {
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      next();
     });
 };
 
 const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
+    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (!card) {
         throw new NotFoundError('Карточка не найдена');
       }
       if (String(card.owner) === req.user._id) {
-        Cards.findByIdAndDelete(req.params.cardId)
+        return Cards.findByIdAndDelete(req.params.cardId)
           .then(() => {
-            res.status(200).send({ message: 'Карточка успешно удалена' })
-              .catch((err) => {
-                if (err.name === 'CastError') {
-                  throw new BadRequestError('Неверный запрос');
-                }
-                next(err);
-              });
+            res.status(200).send({ message: 'Карточка успешно удалена' });
           });
-      } else {
-        throw new ForbiddenError('Чужие карточки удалять запрещено');
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(new ForbiddenError('Чужие карточки удалять запрещено'));
+      }
+    });
 };
 
 const addLike = (req, res, next) => {
@@ -58,9 +58,10 @@ const addLike = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 
@@ -75,9 +76,10 @@ const deleteLike = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        throw new BadRequestError('Неверный запрос');
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

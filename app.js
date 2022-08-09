@@ -1,8 +1,8 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-
 const router = require('./routes/index');
 
 const { PORT = 3000 } = process.env;
@@ -16,18 +16,18 @@ const limiter = rateLimit({
 });
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(helmet());
 app.use(limiter);
 
 mongoose.connect(DB_URL);
 
 app.use('/', router);
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
-  res
-    .status(statusCode).send({
-      message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
-    });
+  res.status(statusCode).send({
+    message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+  });
+  next();
 });
 app.listen(PORT);

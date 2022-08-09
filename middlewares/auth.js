@@ -1,19 +1,16 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET_KEY } = require('../controllers/users');
+const UnauthorizedError = require('../errors/unauthorized-error');
 
 const auth = (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization) {
-    res.status(401).send({ message: 'Unauthorized!' });
-  }
-  const token = authorization.replace('Bearer ', '');
+  const token = req.cookies.jwt;
 
   let payload;
 
   try {
     payload = jwt.verify(token, JWT_SECRET_KEY);
   } catch (err) {
-    res.status(401).send({ message: 'Unauthorized!' });
+    throw new UnauthorizedError('Выполните вход');
   }
   req.user = payload;
   next();

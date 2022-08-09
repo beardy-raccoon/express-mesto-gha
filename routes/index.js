@@ -10,7 +10,7 @@ router.use(publicRouter);
 router.use(auth, userRouter);
 router.use(auth, cardRouter);
 router.use(errors());
-router.use((req, res, next) => {
+router.use(auth, (req, res, next) => {
   next(new NotFoundError('Запрашиваемая страница не найдена'));
 });
 
