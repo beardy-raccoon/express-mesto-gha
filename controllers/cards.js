@@ -26,7 +26,6 @@ const createCard = (req, res, next) => {
 
 const deleteCard = (req, res, next) => {
   Cards.findById(req.params.cardId)
-    // eslint-disable-next-line consistent-return
     .then((card) => {
       if (!card) {
         throw new NotFoundError('Карточка не найдена');
