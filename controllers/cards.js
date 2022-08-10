@@ -41,7 +41,13 @@ const deleteCard = (req, res, next) => {
           res.status(200).send({ message: 'Карточка успешно удалена' });
         });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Неверный запрос'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const addLike = (req, res, next) => {
